@@ -16,6 +16,7 @@ app = FastAPI(title="Caprae Leads API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.frontend_origin, "http://localhost:3000", "http://localhost:3001"],
+    allow_origin_regex=r"https://caprae-leads[^/]*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
