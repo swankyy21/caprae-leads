@@ -73,4 +73,4 @@ I have read and understood the employment expectations outlined below and confir
 
 - **GitHub:** https://github.com/swankyy21/caprae-leads
 - **Live Demo:** https://caprae-leads-vercel.vercel.app
-- **Video Walkthrough:** (https://www.loom.com/share/5910c8933543470a8e5a0f8b1b14dc27)
+- **Video Walkthrough:** https://www.loom.com/share/5910c8933543470a8e5a0f8b1b14dc27
