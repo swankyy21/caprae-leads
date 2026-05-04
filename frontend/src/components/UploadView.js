@@ -1,12 +1,13 @@
 import { useMemo, useRef, useState } from "react";
 import Papa from "papaparse";
 import { FileUp, Loader2, Wand2 } from "lucide-react";
-import { deduplicateLeads, scoreLeadsWithAPI } from "../utils/scoring";
-
-function normalizeNumber(value) {
-  if (typeof value === "number") return value;
-  return Number(String(value || "").replace(/[$,\s]/g, "")) || 0;
-}
+import {
+  deduplicateLeads,
+  normalizeDomain,
+  normalizeRevenue,
+  scoreLeadsWithAPI,
+  validateEmail,
+} from "../utils/scoring";
 
 function normalizeLead(row, index) {
   const company = row.company || row.Company || row.account || row.Account || "";
@@ -14,9 +15,11 @@ function normalizeLead(row, index) {
   const email = row.email || row.Email || "";
   const title = row.title || row.Title || row.role || row.Role || "";
   const industry = row.industry || row.Industry || "Unknown";
-  const employees = normalizeNumber(row.employees || row.Employees || row.size);
-  const revenue = normalizeNumber(row.revenue || row.Revenue || row.arr || row.ARR);
+  const employees = Number(String(row.employees || row.Employees || row.size || "").replace(/[,\s]/g, "")) || 0;
+  const rawRevenue = row.revenue || row.Revenue || row.arr || row.ARR;
+  const revenue = normalizeRevenue(rawRevenue) || 0;
   const notes = row.notes || row.Notes || row.description || row.Description || "";
+  const website = row.website || row.Website || "";
 
   return {
     id: `${company || "lead"}-${index}-${email || contact}`.replace(/\s+/g, "-"),
@@ -27,8 +30,11 @@ function normalizeLead(row, index) {
     industry,
     employees,
     revenue,
+    raw_revenue: rawRevenue || "",
     location: row.location || row.Location || "Unknown",
-    website: row.website || row.Website || "",
+    website,
+    domain: normalizeDomain(website || email.split("@")[1]),
+    email_syntax_valid: validateEmail(email),
     notes,
   };
 }

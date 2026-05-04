@@ -26,24 +26,36 @@ export async function scoreLeadsWithAPI(leads) {
 
 export function normalizeRevenue(raw) {
   if (!raw) return null;
+  if (typeof raw === "number") return raw;
   const s = String(raw)
     .toLowerCase()
-    .replace(/[,$\s]/g, "");
-  const mMatch = s.match(/([\d.]+)m/);
-  const kMatch = s.match(/([\d.]+)k/);
-  if (mMatch) return parseFloat(mMatch[1]) * 1_000_000;
-  if (kMatch) return parseFloat(kMatch[1]) * 1_000;
-  const num = parseFloat(s.replace(/[^0-9.]/g, ""));
-  return isNaN(num) ? null : num;
+    .replace(/[,$]/g, "")
+    .trim();
+  const matches = [...s.matchAll(/([\d.]+)\s*([kmb])?/g)];
+  if (!matches.length) return null;
+
+  const inferredSuffix =
+    [...matches].reverse().find((match) => match[2])?.[2] || "";
+  const values = matches.map((match) => {
+    const suffix = match[2] || inferredSuffix;
+    const multiplier =
+      suffix === "k" ? 1_000 : suffix === "m" ? 1_000_000 : suffix === "b" ? 1_000_000_000 : 1;
+    return parseFloat(match[1]) * multiplier;
+  });
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  return Math.round((min + max) / 2);
 }
 
 export function deduplicateLeads(leads) {
   const seen = new Map();
   return leads.filter((lead) => {
-    const domain =
-      lead.website || lead.domain || lead.email?.split("@")[1] || "";
+    const domain = normalizeDomain(
+      lead.website || lead.domain || lead.email?.split("@")[1] || ""
+    );
     const key =
-      domain.replace(/^www\./, "").toLowerCase() ||
+      domain ||
       (lead.company || lead.name || "").toLowerCase();
     if (!key) return true;
     if (seen.has(key)) return false;
@@ -55,6 +67,16 @@ export function deduplicateLeads(leads) {
 export function validateEmail(email) {
   if (!email) return false;
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+export function normalizeDomain(value) {
+  if (!value) return "";
+  let domain = String(value).trim().toLowerCase();
+  if (domain.includes("@") && !domain.startsWith("http")) {
+    domain = domain.split("@").pop();
+  }
+  domain = domain.replace(/^https?:\/\//, "").replace(/^www\./, "");
+  return domain.split("/")[0].split(":")[0].replace(/\.$/, "");
 }
 
 export function getTierColor(tier) {

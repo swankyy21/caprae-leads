@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .cache import cache_enabled
 from .config import settings
+from .data_quality import clean_leads
 from .database import database_enabled, list_scored_leads
 from .schemas import ExportRequest, ScoreRequest, ScoreResponse
 from .scoring import score_lead
@@ -47,7 +48,7 @@ async def get_leads(limit: int = 100) -> dict[str, list[dict]]:
 @app.post("/api/leads/score", response_model=ScoreResponse)
 async def score_leads(payload: ScoreRequest) -> ScoreResponse:
     scored = []
-    for lead in payload.leads:
+    for lead in await clean_leads(payload.leads):
         scored.append(await score_lead(lead))
     scored.sort(key=lambda item: item.score, reverse=True)
     return ScoreResponse(leads=scored)

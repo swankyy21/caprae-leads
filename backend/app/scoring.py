@@ -49,8 +49,10 @@ def _fallback_score(lead: dict[str, Any]) -> dict[str, Any]:
         industry_fit = 54
 
     owner_reachability = 35
-    if lead.get("email"):
+    if lead.get("email_valid"):
         owner_reachability += 25
+    elif lead.get("email_syntax_valid"):
+        owner_reachability += 10
     if lead.get("phone"):
         owner_reachability += 15
     if lead.get("owner") or lead.get("founder") or re.search(r"founder|owner", description):
@@ -98,9 +100,11 @@ Company data:
 - Location: {_text(lead.get("location") or lead.get("city") or lead.get("country"))}
 - Employees: {_text(lead.get("employees") or lead.get("employee_count"))}
 - Revenue: {_text(lead.get("revenue") or lead.get("annual_revenue"))}
+- Normalized revenue range: {_text(lead.get("revenue_range"))}
 - Website: {_text(lead.get("website") or lead.get("domain"))}
 - Owner/Contact: {_text(lead.get("owner") or lead.get("contact") or lead.get("founder"))}
 - Email: {_text(lead.get("email"))}
+- Email validation: syntax={lead.get("email_syntax_valid", False)}, mx={lead.get("email_mx_valid", False)}
 - Phone: {_text(lead.get("phone"))}
 - Description: {_text(lead.get("description") or lead.get("notes"), "N/A")}
 
@@ -202,8 +206,8 @@ def _to_frontend_shape(lead: dict[str, Any], score: AIScore, cached: bool) -> Sc
     )
 
 
-async def score_lead(lead: LeadIn) -> ScoredLead:
-    lead_dict = lead.model_dump(exclude_none=True)
+async def score_lead(lead: LeadIn | dict[str, Any]) -> ScoredLead:
+    lead_dict = lead if isinstance(lead, dict) else lead.model_dump(exclude_none=True)
     cache_key = lead_cache_key(lead_dict)
 
     cached_score = await get_cache(cache_key)
