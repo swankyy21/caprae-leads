@@ -134,6 +134,11 @@ btn, .btn {
 
 .page-heading h1 { font-size: 34px; margin-top: 4px; }
 
+.main-text {
+  line-height: 1.6;
+  margin-top: 10px;
+}
+
 .panel {
   background: var(--bg2);
   border: 1px solid var(--border);
@@ -160,16 +165,17 @@ btn, .btn {
 .upload-view {
   min-height: calc(100vh - 116px);
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(360px, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 460px);
   gap: 42px;
   align-items: center;
   padding: 46px 0;
 }
 
 .upload-copy h1 {
-  max-width: 700px;
-  font-size: clamp(42px, 6vw, 74px);
+  max-width: 640px;
+  font-size: clamp(40px, 5vw, 64px);
   margin: 10px 0 18px;
+  overflow-wrap: normal;
 }
 
 .upload-copy p:last-child {
@@ -380,7 +386,15 @@ btn, .btn {
 }
 
 .search-box input { width: 190px; }
-.sort-box select { cursor: pointer; }
+.sort-box select {
+  cursor: pointer;
+  color-scheme: dark;
+}
+
+.sort-box select option {
+  background: var(--bg3);
+  color: var(--text);
+}
 
 .table-scroll {
   overflow-x: auto;

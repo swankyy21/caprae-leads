@@ -1,8 +1,8 @@
-import asyncio
 import re
 from typing import Any
 from urllib.parse import urlparse
 
+import dns.exception
 import dns.resolver
 
 from .schemas import LeadIn
@@ -10,6 +10,7 @@ from .schemas import LeadIn
 
 EMAIL_RE = re.compile(r"^[A-Z0-9._%+-]+@([A-Z0-9.-]+\.[A-Z]{2,})$", re.IGNORECASE)
 REVENUE_RE = re.compile(r"(\d+(?:\.\d+)?)\s*([kmb])?", re.IGNORECASE)
+RESERVED_DNS_SUFFIXES = (".example", ".invalid", ".localhost", ".test")
 
 
 def normalize_domain(value: Any) -> str:
@@ -79,18 +80,20 @@ def validate_email_syntax(email: Any) -> tuple[bool, str]:
 def _has_mx_record(domain: str) -> bool:
     if not domain:
         return False
+    if domain.endswith(RESERVED_DNS_SUFFIXES):
+        return False
     resolver = dns.resolver.Resolver()
-    resolver.lifetime = 2
-    resolver.timeout = 1
+    resolver.lifetime = 1
+    resolver.timeout = 0.5
     try:
         return bool(resolver.resolve(domain, "MX"))
-    except (dns.resolver.DNSException, TimeoutError):
+    except (dns.exception.DNSException, TimeoutError):
         return False
 
 
 async def validate_email(email: Any) -> dict[str, bool | str]:
     syntax_valid, domain = validate_email_syntax(email)
-    mx_valid = await asyncio.to_thread(_has_mx_record, domain) if syntax_valid else False
+    mx_valid = _has_mx_record(domain) if syntax_valid else False
     return {
         "email_syntax_valid": syntax_valid,
         "email_mx_valid": mx_valid,
@@ -101,9 +104,7 @@ async def validate_email(email: Any) -> dict[str, bool | str]:
 
 async def clean_leads(leads: list[LeadIn]) -> list[dict[str, Any]]:
     raw_leads = [lead.model_dump(exclude_none=True) for lead in leads]
-    email_checks = await asyncio.gather(
-        *(validate_email(lead.get("email")) for lead in raw_leads)
-    )
+    email_checks = [await validate_email(lead.get("email")) for lead in raw_leads]
 
     cleaned: list[dict[str, Any]] = []
     seen: set[str] = set()

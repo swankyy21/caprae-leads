@@ -1,14 +1,15 @@
 import { LayoutDashboard, Target, Upload } from "lucide-react";
 import "../Header.css";
 
-export default function Header({ view, setView, leadsCount }) {
+export default function Header({ view, setView, leadsCount, onHome }) {
   return (
     <header className="header">
       <div className="header-inner">
         <button
           className="header-brand"
           type="button"
-          onClick={() => setView(leadsCount ? "dashboard" : "upload")}
+          onClick={onHome}
+          aria-label="Go to home"
         >
           <span className="header-logo">
             <Target size={16} strokeWidth={2.5} />

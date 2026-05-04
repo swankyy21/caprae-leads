@@ -23,12 +23,18 @@ export default function App() {
     setView("detail");
   };
 
+  const handleHome = () => {
+    setSelectedLead(null);
+    setView("upload");
+  };
+
   return (
     <div className="app">
       <Header
         view={view}
         setView={setView}
         leadsCount={leads.length}
+        onHome={handleHome}
         onBack={() => setView(leads.length ? "dashboard" : "upload")}
       />
       <main className="app-main">

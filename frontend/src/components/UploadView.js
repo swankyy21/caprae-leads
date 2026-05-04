@@ -53,6 +53,12 @@ export default function UploadView({
     []
   );
 
+  const openFilePicker = () => {
+    if (!inputRef.current) return;
+    inputRef.current.value = "";
+    inputRef.current.click();
+  };
+
   const scoreRows = async (rows) => {
     const normalized = rows
       .filter((row) => Object.values(row).some(Boolean))
@@ -61,6 +67,7 @@ export default function UploadView({
 
     if (!uniqueLeads.length) {
       setError("No usable lead rows were found.");
+      if (inputRef.current) inputRef.current.value = "";
       return;
     }
 
@@ -76,6 +83,7 @@ export default function UploadView({
     } catch (apiError) {
       setError(apiError.message || "Scoring failed. Check backend configuration.");
       setScoringProgress(0);
+      if (inputRef.current) inputRef.current.value = "";
     } finally {
       window.setTimeout(() => setIsScoring(false), 250);
     }
@@ -97,7 +105,7 @@ export default function UploadView({
     <section className="upload-view fade-up">
       <div className="upload-copy">
         <p className="eyebrow">CSV lead scoring</p>
-        <h1>Import accounts and rank the best sales conversations first.</h1>
+        <h1 className="main-text">Import accounts and rank the best sales conversations first.</h1>
         <p>
           Upload a CSV with firmographic and owner/contact fields. The backend
           scores each row with Claude, caches repeat companies, and persists
@@ -109,7 +117,7 @@ export default function UploadView({
         <button
           className="dropzone"
           type="button"
-          onClick={() => inputRef.current?.click()}
+          onClick={openFilePicker}
           disabled={isScoring}
         >
           {isScoring ? <Loader2 className="spin" size={30} /> : <FileUp size={30} />}
@@ -136,7 +144,7 @@ export default function UploadView({
           <button
             className="btn btn-primary"
             type="button"
-            onClick={() => inputRef.current?.click()}
+            onClick={openFilePicker}
             disabled={isScoring}
           >
             <Wand2 size={16} />
